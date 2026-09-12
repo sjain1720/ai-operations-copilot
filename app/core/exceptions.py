@@ -15,3 +15,7 @@ class LLMProviderError(Exception):
 
 class ToolExecutionError(Exception):
     pass
+
+
+class InvalidPaginationCursorError(Exception):
+    pass

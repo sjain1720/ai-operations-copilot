@@ -33,10 +33,9 @@ class LLMClient(Protocol):
 
 class OpenAIClient:
     def __init__(self, settings: Settings) -> None:
-        if not settings.openai_api_key:
-            raise LLMConfigurationError("OPENAI_API_KEY is not configured")
-        self.client = OpenAI(api_key=settings.openai_api_key)
+        self.api_key = settings.openai_api_key
         self.model = settings.openai_model
+        self.client: Optional[OpenAI] = None
 
     def complete(
         self,
@@ -44,6 +43,12 @@ class OpenAIClient:
         tools: List[Dict[str, Any]],
         tool_choice: str,
     ) -> LLMResult:
+        if not self.api_key:
+            raise LLMConfigurationError("OPENAI_API_KEY is not configured")
+
+        if self.client is None:
+            self.client = OpenAI(api_key=self.api_key)
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,

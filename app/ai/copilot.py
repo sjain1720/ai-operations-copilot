@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Optional, Set
 
 from app.ai.client import LLMClient
 from app.ai.prompts import SYSTEM_PROMPT
@@ -18,11 +18,16 @@ class CopilotService:
         self.tool_executor = tool_executor
         self.max_tool_rounds = max_tool_rounds
 
-    def answer(self, query: str) -> Dict[str, Any]:
+    def answer(
+        self,
+        query: str,
+        history: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
         messages: List[Dict[str, Any]] = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": query},
         ]
+        messages.extend(history or [])
+        messages.append({"role": "user", "content": query})
         tools_used: List[str] = []
         unique_tools: Set[str] = set()
 

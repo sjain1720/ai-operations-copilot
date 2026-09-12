@@ -5,4 +5,4 @@ class Base(DeclarativeBase):
     pass
 
 
-from app.models import customer, delivery, order, payment  # noqa: E402,F401
+from app.models import conversation, customer, delivery, message, order, payment  # noqa: E402,F401

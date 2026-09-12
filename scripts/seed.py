@@ -1,15 +1,23 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.customer import Customer
+from app.models.conversation import Conversation
 from app.models.delivery import Delivery, DeliveryStatus
+from app.models.message import Message, MessageRole
 from app.models.order import Order, OrderStatus
 from app.models.payment import Payment, PaymentStatus
+
+
+SEEDED_CONVERSATION_A_TITLE = "Seed Conversation A - Order 4521 Support"
+SEEDED_CONVERSATION_B_TITLE = "Seed Conversation B - Order 1289 Delivery"
+SEEDED_CONVERSATION_C_TITLE = "Seed Conversation C - Pagination Demo"
+SEED_CONVERSATION_START = datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)
 
 
 SEED_ORDERS: Tuple[Dict[str, Any], ...] = (
@@ -157,6 +165,141 @@ SEED_ORDERS: Tuple[Dict[str, Any], ...] = (
 )
 
 
+CONVERSATION_A_MESSAGES: Tuple[Tuple[MessageRole, str], ...] = (
+    (MessageRole.USER, "What's the payment status for order 4521?"),
+    (MessageRole.ASSISTANT, "Payment for order 4521 was successful."),
+    (MessageRole.USER, "When was it paid?"),
+    (
+        MessageRole.ASSISTANT,
+        "Payment was completed on 2026-09-02 at 10:30 UTC.",
+    ),
+    (MessageRole.USER, "Is delivery scheduled?"),
+    (
+        MessageRole.ASSISTANT,
+        "Yes. Delivery is scheduled for 2026-09-15 at 09:00 UTC.",
+    ),
+)
+
+
+CONVERSATION_B_MESSAGES: Tuple[Tuple[MessageRole, str], ...] = (
+    (MessageRole.USER, "Has the payment for order 1289 been received?"),
+    (MessageRole.ASSISTANT, "Payment for order 1289 was successful."),
+    (MessageRole.USER, "Why is delivery not scheduled?"),
+    (
+        MessageRole.ASSISTANT,
+        "Delivery for order 1289 is not scheduled yet, despite the successful payment.",
+    ),
+)
+
+
+CONVERSATION_C_EXCHANGES: Tuple[Tuple[str, str], ...] = (
+    (
+        "Give me the current status of order 4521.",
+        "Order 4521 is confirmed, paid successfully, and delivery is scheduled.",
+    ),
+    (
+        "What payment method was used for that order?",
+        "The payment method for order 4521 was UPI.",
+    ),
+    (
+        "What is the delivery date for order 4521?",
+        "Delivery for order 4521 is scheduled for 2026-09-15 at 09:00 UTC.",
+    ),
+    (
+        "Now check order 1289.",
+        "Order 1289 has a successful card payment and no scheduled delivery.",
+    ),
+    (
+        "When was order 1289 paid?",
+        "Order 1289 was paid on 2026-09-03 at 12:15 UTC.",
+    ),
+    (
+        "What operational gap should the team investigate?",
+        "The payment succeeded, but delivery for order 1289 is still not scheduled.",
+    ),
+    (
+        "Can you check the pending payment case?",
+        "Order 3340 has a pending payment and delivery is not scheduled.",
+    ),
+    (
+        "Does it have a transaction reference?",
+        "No transaction reference or paid timestamp is recorded for order 3340.",
+    ),
+    (
+        "What happened with order 5678?",
+        "Payment for order 5678 failed because the bank declined the transaction.",
+    ),
+    (
+        "Should delivery proceed for that order?",
+        "Delivery for order 5678 is not scheduled while payment remains failed.",
+    ),
+    (
+        "Give me the delivery status for order 2231.",
+        "Order 2231 is in transit with tracking reference DEL-2231-IN-TRANSIT.",
+    ),
+    (
+        "Was order 2231 paid successfully?",
+        "Yes. Order 2231 has a successful bank-transfer payment.",
+    ),
+    (
+        "Which order has already been delivered?",
+        "Order 7812 has been delivered.",
+    ),
+    (
+        "When was that delivery completed?",
+        "Order 7812 was delivered on 2026-08-25 at 16:30 UTC.",
+    ),
+    (
+        "What is the status of cancelled order 9044?",
+        "Order 9044 is cancelled, its payment is refunded, and its delivery is cancelled.",
+    ),
+    (
+        "Is there a delivery issue for order 6150?",
+        "Delivery for order 6150 failed because address verification failed.",
+    ),
+    (
+        "Was payment successful for order 6150?",
+        "Yes. Payment for order 6150 was successful.",
+    ),
+    (
+        "Summarize the operational cases reviewed so far.",
+        "The examples include scheduled, unscheduled, pending, failed, in-transit, delivered, cancelled, and failed-delivery cases.",
+    ),
+    (
+        "Which case shows payment succeeded but delivery was not scheduled?",
+        "Order 1289 shows a successful payment with delivery not scheduled.",
+    ),
+    (
+        "Which case is currently in transit?",
+        "Order 2231 is currently in transit.",
+    ),
+    (
+        "Which case has a refunded payment?",
+        "Order 9044 has a refunded payment because the order was cancelled.",
+    ),
+    (
+        "Which case needs address follow-up?",
+        "Order 6150 needs address follow-up because delivery failed address verification.",
+    ),
+    (
+        "Are all reviewed orders in the same lifecycle state?",
+        "No. The reviewed orders span created, confirmed, cancelled, and completed states.",
+    ),
+)
+
+
+def build_pagination_messages() -> Tuple[Tuple[MessageRole, str], ...]:
+    messages: List[Tuple[MessageRole, str]] = []
+    for user_message, assistant_message in CONVERSATION_C_EXCHANGES:
+        messages.extend(
+            (
+                (MessageRole.USER, user_message),
+                (MessageRole.ASSISTANT, assistant_message),
+            )
+        )
+    return tuple(messages)
+
+
 def get_or_create_customer(session: Session, data: Dict[str, str]) -> Customer:
     customer = session.scalar(
         select(Customer).where(Customer.email == data["email"])
@@ -225,7 +368,63 @@ def seed_database(session: Session) -> None:
         delivery.delivered_at = data.get("delivered_at")
         delivery.failure_reason = data.get("delivery_failure_reason")
 
+    seed_conversations(session)
+
     session.commit()
+
+
+def seed_conversations(session: Session) -> None:
+    seed_conversation(
+        session,
+        title=SEEDED_CONVERSATION_A_TITLE,
+        messages=CONVERSATION_A_MESSAGES,
+        start_time=SEED_CONVERSATION_START,
+    )
+    seed_conversation(
+        session,
+        title=SEEDED_CONVERSATION_B_TITLE,
+        messages=CONVERSATION_B_MESSAGES,
+        start_time=SEED_CONVERSATION_START + timedelta(hours=1),
+    )
+    seed_conversation(
+        session,
+        title=SEEDED_CONVERSATION_C_TITLE,
+        messages=build_pagination_messages(),
+        start_time=SEED_CONVERSATION_START + timedelta(hours=2),
+    )
+
+
+def seed_conversation(
+    session: Session,
+    title: str,
+    messages: Tuple[Tuple[MessageRole, str], ...],
+    start_time: datetime,
+) -> Conversation:
+    conversation = session.scalar(
+        select(Conversation).where(Conversation.title == title)
+    )
+    if conversation is None:
+        conversation = Conversation(title=title)
+        session.add(conversation)
+        session.flush()
+    else:
+        session.query(Message).filter(
+            Message.conversation_id == conversation.id
+        ).delete(synchronize_session=False)
+
+    conversation.created_at = start_time
+    conversation.updated_at = start_time + timedelta(minutes=len(messages) - 1)
+
+    for offset, (role, content) in enumerate(messages):
+        session.add(
+            Message(
+                conversation_id=conversation.id,
+                role=role,
+                content=content,
+                created_at=start_time + timedelta(minutes=offset),
+            )
+        )
+    return conversation
 
 
 def main() -> None:

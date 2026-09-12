@@ -9,10 +9,13 @@ from app.ai.tools import BackendToolExecutor
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.repositories.customer import CustomerRepository
+from app.repositories.conversation import ConversationRepository
 from app.repositories.delivery import DeliveryRepository
+from app.repositories.message import MessageRepository
 from app.repositories.order import OrderRepository
 from app.repositories.payment import PaymentRepository
 from app.services.customer import CustomerService
+from app.services.conversation import ConversationService
 from app.services.delivery import DeliveryService
 from app.services.order import OrderService
 from app.services.payment import PaymentService
@@ -34,6 +37,15 @@ def get_payment_service(session: Session = Depends(get_db)) -> PaymentService:
 
 def get_delivery_service(session: Session = Depends(get_db)) -> DeliveryService:
     return DeliveryService(DeliveryRepository(session))
+
+
+def get_conversation_service(
+    session: Session = Depends(get_db),
+) -> ConversationService:
+    return ConversationService(
+        conversation_repository=ConversationRepository(session),
+        message_repository=MessageRepository(session),
+    )
 
 
 def get_copilot_service(session: Session = Depends(get_db)) -> CopilotService:
