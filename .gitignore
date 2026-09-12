@@ -1,0 +1,52 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches and generated files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Packaging and build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Local databases and runtime files
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# IDE and editor files
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
