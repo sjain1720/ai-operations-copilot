@@ -3,7 +3,7 @@ from collections.abc import Generator
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.ai.client import OpenAIClient
+from app.ai.client import GeminiClient
 from app.ai.copilot import CopilotService
 from app.ai.tools import BackendToolExecutor
 from app.core.config import get_settings
@@ -52,7 +52,7 @@ def get_copilot_service(session: Session = Depends(get_db)) -> CopilotService:
     settings = get_settings()
     order_service = OrderService(OrderRepository(session))
     return CopilotService(
-        llm_client=OpenAIClient(settings),
+        llm_client=GeminiClient(settings),
         tool_executor=BackendToolExecutor(
             order_service=order_service,
             payment_service=PaymentService(PaymentRepository(session)),

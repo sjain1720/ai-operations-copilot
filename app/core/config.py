@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "AI Operations Copilot"
     database_url: str
-    openai_api_key: Optional[str] = None
-    openai_model: str = "gpt-4o-mini"
+    gemini_api_key: Optional[str] = None
+    gemini_model: str = "gemini-3.6-flash"
     llm_max_tool_rounds: int = 4
 
     model_config = SettingsConfigDict(

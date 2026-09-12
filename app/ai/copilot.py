@@ -62,6 +62,7 @@ class CopilotService:
                 messages.append(
                     {
                         "role": "tool",
+                        "name": tool_call.name,
                         "tool_call_id": tool_call.call_id,
                         "content": json.dumps(tool_result),
                     }
