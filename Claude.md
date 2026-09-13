@@ -12,6 +12,8 @@ Tech stack:
 * SQLAlchemy
 * LLM with tool/function calling
 
+The copilot supports both single-turn operational queries and persistent multi-turn conversations.
+
 ## Engineering Principles
 
 * Follow clean, production-quality backend engineering practices.
@@ -41,17 +43,35 @@ The LLM should use backend tools/functions to retrieve required information such
 
 The final response should be grounded in the retrieved backend data and should not invent operational information.
 
+For multi-turn conversations:
+
+* Conversations are persisted in PostgreSQL.
+* User and assistant messages are stored against a conversation.
+* A conversation does not automatically end.
+* Follow-up queries within the same conversation should use recent conversation history for context.
+* Only the required recent message history should be provided to the LLM rather than loading the entire conversation into the LLM context.
+* Tool calls and tool results are internal to the request and are not persisted as normal conversation messages.
+
 ## Database
 
 Use PostgreSQL with SQLAlchemy.
 
 Use proper relationships, constraints, indexes, and timestamps where appropriate.
 
+The database contains both operational data and conversation history.
+
+Conversation history consists of:
+
+* Conversations
+* Messages belonging to conversations
+
 Generate realistic seed data and include a reproducible seed script as required by the assignment.
 
 ## Testing
 
-Write meaningful tests for:
+Testing is part of the future development scope.
+
+When the testing phase begins, write meaningful tests for:
 
 * Core business logic
 * API behaviour
@@ -61,6 +81,14 @@ Write meaningful tests for:
 
 Do not write tests merely to increase coverage.
 
+Until the testing phase is explicitly started, do not add tests unnecessarily while implementing unrelated features.
+
+## Authentication and Authorization
+
+Authentication and authorization are future development scope.
+
+Do not introduce authentication or authorization unless explicitly requested as part of a future implementation phase.
+
 ## Development Workflow
 
 Before implementing a significant feature:
@@ -69,18 +97,20 @@ Before implementing a significant feature:
 2. Understand the requirement.
 3. Explain the proposed approach briefly.
 4. Implement the smallest clean solution.
-5. Add or update relevant tests.
+5. Add or update relevant tests when testing is part of the current development phase.
 6. Check for regressions.
 
 Do not rewrite working code unnecessarily.
 
 ## Documentation
 
-Keep `PROJECT.md` aligned with the actual requirements and decisions.
+Keep `PROJECT.md` aligned with the actual requirements, current features, and architectural decisions.
 
 Create/update `DESIGN.md` and `README.md` when the architecture and implementation are sufficiently established.
 
 Documentation must describe the actual implementation, not an idealised version.
+
+When a major feature is added, ensure the project documentation reflects the final behaviour.
 
 ## Git
 
